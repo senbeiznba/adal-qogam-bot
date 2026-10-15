@@ -1,3 +1,5 @@
+import os
+os.environ["HNSWLIB_NO_AVX"] = "1"
 import hashlib, hmac, os, time
 from collections import defaultdict, deque
 from urllib.parse import parse_qsl
