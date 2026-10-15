@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Адал қоғам</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:var(--tg-theme-bg-color,#f6f8fa);--fg:var(--tg-theme-text-color,#14202b);--hint:var(--tg-theme-hint-color,#6b7a88);
+--card:var(--tg-theme-secondary-bg-color,#fff);--sky:#0e8fb0;--sun:#f2b705;--ok:#2e9e5b;--bad:#d64545;--line:rgba(120,140,160,.28)}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:3px solid var(--sun)}
+header h1{font-size:18px;margin:0;font-weight:700}header small{display:block;color:var(--hint);font-size:12px;font-weight:400}
+.right{display:flex;align-items:center;gap:10px}
+.xp{font-size:13px;font-weight:600;color:var(--sky)}
+.lang button{border:1px solid var(--line);background:none;color:var(--fg);padding:4px 10px;font:inherit;font-size:13px;cursor:pointer}
+.lang button:first-child{border-radius:8px 0 0 8px}.lang button:last-child{border-radius:0 8px 8px 0;border-left:0}
+.lang button.on{background:var(--sky);color:#fff;border-color:var(--sky)}
+.view{flex:1;min-height:0;display:none;flex-direction:column}.view.on{display:flex}
+#log,.pad{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:92%;white-space:pre-wrap;word-wrap:break-word}
+.me{align-self:flex-end;background:var(--sky);color:#fff;padding:8px 12px;border-radius:14px 14px 2px 14px}
+.bot{align-self:flex-start}
+.bot .txt{background:var(--card);padding:10px 12px;border-radius:2px 14px 14px 14px;border:1px solid var(--line)}
+.src{margin-top:6px;border-left:3px solid var(--sky);padding:2px 0 2px 10px;font-size:13px;color:var(--hint)}
+.src summary{cursor:pointer;color:var(--fg)}.src a{color:var(--sky)}.src p{margin:6px 0 0;white-space:pre-wrap}
+.hello{color:var(--hint);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chips button{border:1px solid var(--sky);color:var(--sky);background:none;border-radius:16px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer;text-align:left}
+form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+input{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;background:var(--card);color:var(--fg)}
+.btn{background:var(--sky);color:#fff;border:0;border-radius:12px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.5}.btn.ghost{background:none;color:var(--sky);border:1px solid var(--sky)}
+.prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.prog i{display:block;height:100%;background:var(--sun);transition:width .4s}
+.qn{color:var(--hint);font-size:13px}.q{font-size:18px;font-weight:600;line-height:1.35}
+.opt{text-align:left;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;cursor:pointer}
+.opt.ok{border-color:var(--ok);background:rgba(46,158,91,.14)}.opt.bad{border-color:var(--bad);background:rgba(214,69,69,.12)}
+.expl{background:var(--card);border-left:3px solid var(--sun);padding:10px 12px;border-radius:0 10px 10px 0;font-size:14px}
+.expl a{color:var(--sky)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.lvl{font-size:22px;font-weight:700}.stats{display:flex;gap:10px}.stats .card{flex:1;text-align:center}
+.stats b{display:block;font-size:22px}.stats span{font-size:12px;color:var(--hint)}
+.badges{display:flex;flex-wrap:wrap;gap:8px}.badge{padding:6px 10px;border-radius:10px;font-size:13px;border:1px solid var(--line);color:var(--hint)}
+.badge.got{border-color:var(--sun);color:var(--fg);background:rgba(242,183,5,.16)}
+nav{display:flex;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0);background:var(--bg)}
+nav button{flex:1;background:none;border:0;padding:12px 4px;font:inherit;font-size:14px;color:var(--hint);cursor:pointer;border-top:3px solid transparent}
+nav button.on{color:var(--sky);font-weight:700;border-top-color:var(--sky)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Адал қоғам<small id="sub"></small></h1>
+  <div class="right"><span class="xp" id="xpTop"></span>
+  <div class="lang"><button id="kk">ҚАЗ</button><button id="ru" class="on">РУС</button></div></div>
+</header>
+
+<section class="view on" id="v-ask"><div id="log"></div>
+  <form id="f"><input id="q" maxlength="500" autocomplete="off"><button class="btn" id="send"></button></form></section>
+<section class="view" id="v-quiz"><div class="pad" id="quiz"></div></section>
+<section class="view" id="v-me"><div class="pad" id="me"></div></section>
+<nav><button data-v="ask"></button><button data-v="quiz"></button><button data-v="me"></button></nav>
+
+<script>
+const tg=window.Telegram?.WebApp; tg?.ready(); tg?.expand();
+const $=id=>document.getElementById(id), el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const buzz=k=>{try{tg?.HapticFeedback?.notificationOccurred(k)}catch(e){}};
+
+const T={
+ru:{sub:"Справочник по Конституции 2026",ph:"Задайте вопрос…",send:"Отправить",nav:["Спросить","Викторина","Профиль"],
+ hi:"Задайте вопрос о Конституции — отвечу со ссылкой на статью. Например:",wait:"Ищу в документах…",src:"Источники",net:"Нет связи с сервером. Проверьте интернет и повторите.",
+ ex:["Какие права и свободы гарантирует Конституция?","Как избирается Президент?","Что сказано о справедливом государстве?"],
+ qTitle:"Викторина по Конституции",qIntro:"5 вопросов. +10 очков за верный ответ, +20 бонус за идеальный результат.",start:"Начать",next:"Дальше",finish:"Завершить",
+ qOf:(a,b)=>`Вопрос ${a} из ${b}`,art:"Статья",res:(a,b)=>`Верно: ${a} из ${b}`,again:"Сыграть ещё",noq:"Вопросы не загрузились. Проверьте файл quiz.json и повторите.",
+ lvls:["Гражданин","Знаток","Хранитель закона"],lvlOf:"Уровень",toNext:n=>`До следующего уровня: ${n} очков`,maxl:"Максимальный уровень",
+ pts:"очков",streak:"дней подряд",played:"викторин",badges:"Значки",
+ b:{first:"Первая викторина",perfect:"Без ошибок",streak3:"3 дня подряд",ask:"Задан вопрос боту",xp100:"100 очков"}},
+kk:{sub:"2026 жылғы Конституция бойынша анықтамалық",ph:"Сұрақ қойыңыз…",send:"Жіберу",nav:["Сұрау","Викторина","Профиль"],
+ hi:"Конституция туралы сұрақ қойыңыз — бап нөмірімен жауап беремін. Мысалы:",wait:"Құжаттардан іздеудемін…",src:"Дереккөздер",net:"Серверге қосылу мүмкін емес. Интернетті тексеріп, қайталаңыз.",
+ ex:["Конституция қандай құқықтар мен бостандықтарды кепілдейді?","Президент қалай сайланады?","Әділетті мемлекет туралы не айтылған?"],
+ qTitle:"Конституция бойынша викторина",qIntro:"5 сұрақ. Дұрыс жауапқа +10 ұпай, мінсіз нәтижеге +20 бонус.",start:"Бастау",next:"Келесі",finish:"Аяқтау",
+ qOf:(a,b)=>`${a}-сұрақ, барлығы ${b}`,art:"Бап",res:(a,b)=>`Дұрыс: ${a} / ${b}`,again:"Қайта ойнау",noq:"Сұрақтар жүктелмеді. quiz.json файлын тексеріп, қайталаңыз.",
+ lvls:["Азамат","Білгір","Заң сақшысы"],lvlOf:"Деңгей",toNext:n=>`Келесі деңгейге дейін: ${n} ұпай`,maxl:"Ең жоғары деңгей",
+ pts:"ұпай",streak:"күн қатарынан",played:"викторина",badges:"Белгілер",
+ b:{first:"Алғашқы викторина",perfect:"Қатесіз",streak3:"3 күн қатарынан",ask:"Ботқа сұрақ қойылды",xp100:"100 ұпай"}}
+};
+let L="ru";
+
+/* ---------- состояние игрока (Telegram CloudStorage или localStorage) ---------- */
+const DEF={xp:0,streak:0,last:"",played:0,badges:[]};let S={...DEF};
+const store={
+ get:()=>new Promise(r=>{try{if(tg?.CloudStorage){tg.CloudStorage.getItem("s",(e,v)=>r(v?JSON.parse(v):null));return}}catch(e){}
+  try{r(JSON.parse(localStorage.getItem("s")))}catch(e){r(null)}}),
+ set:s=>{const v=JSON.stringify(s);try{if(tg?.CloudStorage){tg.CloudStorage.setItem("s",v);return}}catch(e){}try{localStorage.setItem("s",v)}catch(e){}}};
+const save=()=>store.set(S);
+const day=()=>new Date().toISOString().slice(0,10);
+function touchStreak(){const t=day();if(S.last===t)return;
+ const y=new Date(Date.now()-864e5).toISOString().slice(0,10);S.streak=S.last===y?S.streak+1:1;S.last=t;}
+function award(id){if(!S.badges.includes(id)){S.badges.push(id);return true}return false}
+const LV=[0,100,300];
+const lvl=()=>LV.reduce((a,t,i)=>S.xp>=t?i:a,0);
+function addXp(n){S.xp+=n;if(S.xp>=100)award("xp100");save();showXp()}
+function showXp(){$("xpTop").textContent=`${S.xp} ${T[L].pts}`}
+
+/* ---------- навигация и язык ---------- */
+function show(v){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+ if(v==="quiz")quizIntro();if(v==="me")profile()}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+function setLang(l){L=l;document.documentElement.lang=l;$("kk").classList.toggle("on",l==="kk");$("ru").classList.toggle("on",l==="ru");
+ $("sub").textContent=T[l].sub;$("q").placeholder=T[l].ph;$("send").textContent=T[l].send;
+ document.querySelectorAll("nav button").forEach((b,i)=>b.textContent=T[l].nav[i]);showXp();hello();
+ const v=document.querySelector(".view.on").id.slice(2);if(v==="quiz")quizIntro();if(v==="me")profile()}
+$("kk").onclick=()=>setLang("kk");$("ru").onclick=()=>setLang("ru");
+
+/* ---------- чат ---------- */
+const log=$("log");
+function hello(){log.innerHTML="";const m=el("div","msg bot hello",T[L].hi),ch=el("div","chips");
+ T[L].ex.forEach(s=>{const b=el("button",null,s);b.onclick=()=>ask(s);ch.appendChild(b)});m.appendChild(ch);log.appendChild(m)}
+async function ask(q){q=q.trim();if(!q)return;$("q").value="";
+ log.appendChild(el("div","msg me",q));const w=el("div","msg bot"),t=el("div","txt",T[L].wait);w.appendChild(t);log.appendChild(w);log.scrollTop=log.scrollHeight;
+ $("send").disabled=true;
+ try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,init_data:tg?.initData||""})});
+  if(!r.ok)throw 0;const d=await r.json();t.textContent=d.answer;
+  (d.sources||[]).forEach(s=>{const det=el("details","src");det.appendChild(el("summary",null,`${T[L].src}: ${s.title}${s.article?`, ${T[L].art.toLowerCase()} ${s.article}`:""}`));
+   det.appendChild(el("p",null,s.quote+"…"));
+   if(/^https?:/.test(s.url)){const a=el("a",null,s.url);a.href=s.url;a.target="_blank";a.rel="noopener";det.appendChild(a)}w.appendChild(det)});
+  if(!d.error&&award("ask")){save()}
+ }catch(e){t.textContent=T[L].net}
+ $("send").disabled=false;log.scrollTop=log.scrollHeight}
+$("f").onsubmit=e=>{e.preventDefault();ask($("q").value)};
+
+/* ---------- викторина ---------- */
+const Q=$("quiz");let qs=[],qi=0,right=0;
+function quizIntro(){Q.innerHTML="";const c=el("div","card");c.appendChild(el("div","lvl",T[L].qTitle));c.appendChild(el("p",null,T[L].qIntro));
+ const b=el("button","btn",T[L].start);b.onclick=startQuiz;c.appendChild(b);Q.appendChild(c)}
+async function startQuiz(){try{const r=await fetch(`/api/quiz?lang=${L}&n=5`);qs=await r.json();if(!qs.length)throw 0}catch(e){Q.innerHTML="";Q.appendChild(el("div","card",T[L].noq));return}
+ qi=0;right=0;touchStreak();renderQ()}
+function renderQ(){const d=qs[qi];Q.innerHTML="";
+ Q.appendChild(el("div","qn",T[L].qOf(qi+1,qs.length)));
+ const p=el("div","prog"),i=el("i");i.style.width=(qi/qs.length*100)+"%";p.appendChild(i);Q.appendChild(p);
+ Q.appendChild(el("div","q",d.q));const box=el("div");box.style.cssText="display:flex;flex-direction:column;gap:10px";
+ d.options.forEach((o,k)=>{const b=el("button","opt",o);b.onclick=()=>pick(k,box);box.appendChild(b)});Q.appendChild(box)}
+function pick(k,box){const d=qs[qi],bs=[...box.children];bs.forEach(b=>b.disabled=true);
+ bs[d.answer].classList.add("ok");if(k===d.answer){right++;buzz("success")}else{bs[k].classList.add("bad");buzz("error")}
+ const ex=el("div","expl",d.explanation+" ");ex.appendChild(el("b",null,`(${T[L].art} ${d.article}) `));
+ if(/^https?:/.test(d.url)){const a=el("a",null,"→");a.href=d.url;a.target="_blank";a.rel="noopener";ex.appendChild(a)}Q.appendChild(ex);
+ const n=el("button","btn",qi+1<qs.length?T[L].next:T[L].finish);n.onclick=()=>{qi++;qi<qs.length?renderQ():endQuiz()};Q.appendChild(n);n.scrollIntoView({block:"nearest"})}
+function endQuiz(){const gain=right*10+(right===qs.length?20:0);S.played++;award("first");if(right===qs.length)award("perfect");if(S.streak>=3)award("streak3");addXp(gain);
+ Q.innerHTML="";const c=el("div","card");c.appendChild(el("div","lvl",T[L].res(right,qs.length)));c.appendChild(el("p",null,`+${gain} ${T[L].pts}`));
+ const b=el("button","btn",T[L].again);b.onclick=startQuiz;c.appendChild(b);Q.appendChild(c);buzz("success")}
+
+/* ---------- профиль ---------- */
+function profile(){const P=$("me");P.innerHTML="";const i=lvl(),c=el("div","card");
+ c.appendChild(el("div","qn",`${T[L].lvlOf} ${i+1}`));c.appendChild(el("div","lvl",T[L].lvls[i]));
+ const nx=LV[i+1],pr=el("div","prog"),bar=el("i");bar.style.width=(nx?(S.xp-LV[i])/(nx-LV[i])*100:100)+"%";pr.appendChild(bar);c.appendChild(pr);
+ c.appendChild(el("p","qn",nx?T[L].toNext(nx-S.xp):T[L].maxl));P.appendChild(c);
+ const st=el("div","stats");[[S.xp,T[L].pts],[S.streak,T[L].streak],[S.played,T[L].played]].forEach(([n,l])=>{const k=el("div","card");k.appendChild(el("b",null,n));k.appendChild(el("span",null,l));st.appendChild(k)});P.appendChild(st);
+ P.appendChild(el("div","qn",T[L].badges));const bd=el("div","badges");
+ Object.keys(T[L].b).forEach(id=>bd.appendChild(el("span","badge"+(S.badges.includes(id)?" got":""),T[L].b[id])));P.appendChild(bd)}
+
+/* ---------- старт ---------- */
+setLang(tg?.initDataUnsafe?.user?.language_code==="kk"?"kk":"ru");show("ask");
+Promise.race([store.get(),new Promise(r=>setTimeout(()=>r(null),1500))]).then(s=>{if(s){S={...DEF,...s};showXp()}}).catch(()=>{});
+</script>
+</body>
+</html>
