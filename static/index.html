@@ -77,7 +77,26 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--sun);outline-of
 
 <section class="view on" id="v-home"><div class="pad" id="home"></div></section>
 <section class="view" id="v-ask"><div id="log"></div>
-  <form id="f"><input id="q" maxlength="500" autocomplete="off"><button class="btn" id="send"></button></form></section>
+ <form id="f">
+  <input id="q" maxlength="500" autocomplete="off">
+
+  <input
+    id="media"
+    type="file"
+    accept="image/jpeg,image/png,image/webp,audio/*"
+    hidden
+  >
+
+  <button
+    class="btn ghost"
+    id="attach"
+    type="button"
+    aria-label="Прикрепить фото или аудио"
+    title="Прикрепить фото или аудио"
+  >📎</button>
+
+  <button class="btn" id="send" type="submit"></button>
+</form>
 <section class="view" id="v-quiz"><div class="pad" id="quiz"></div></section>
 <section class="view" id="v-me"><div class="pad" id="me"></div></section>
 <nav><button data-v="ask"></button><button data-v="quiz"></button><button data-v="me"></button></nav>
@@ -149,23 +168,144 @@ function setLang(l){L=l;document.documentElement.lang=l;$("kk").classList.toggle
  const v=cur();if(v==="home")home();if(v==="quiz")quizIntro();if(v==="me")profile()}
 $("kk").onclick=()=>setLang("kk");$("ru").onclick=()=>setLang("ru");
 
-/* ---------- чат ---------- */
-const log=$("log");
-function hello(){log.innerHTML="";const m=el("div","msg bot hello",T[L].hi),ch=el("div","chips");
- T[L].ex.forEach(s=>{const b=el("button",null,s);b.onclick=()=>ask(s);ch.appendChild(b)});m.appendChild(ch);log.appendChild(m)}
-async function ask(q){q=q.trim();if(!q)return;$("q").value="";
- log.appendChild(el("div","msg me",q));const w=el("div","msg bot"),t=el("div","txt",T[L].wait);w.appendChild(t);log.appendChild(w);log.scrollTop=log.scrollHeight;
- $("send").disabled=true;
- try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,init_data:tg?.initData||""})});
-  if(!r.ok)throw 0;const d=await r.json();t.textContent=d.answer;
-  (d.sources||[]).forEach(s=>{const det=el("details","src");det.appendChild(el("summary",null,`${T[L].src}: ${s.title}${s.article?`, ${T[L].art.toLowerCase()} ${s.article}`:""}`));
-   det.appendChild(el("p",null,s.quote+"…"));
-   if(/^https?:/.test(s.url)){const a=el("a",null,s.url);a.href=s.url;a.target="_blank";a.rel="noopener";det.appendChild(a)}w.appendChild(det)});
-  if(!d.error&&award("ask")){save()}
- }catch(e){t.textContent=T[L].net}
- $("send").disabled=false;log.scrollTop=log.scrollHeight}
-$("f").onsubmit=e=>{e.preventDefault();ask($("q").value)};
 
+/* ---------- чат: текст, изображения и аудио ---------- */
+const log = $("log");
+
+function hello() {
+  log.innerHTML = "";
+  const message = el("div", "msg bot hello", T[L].hi);
+  const chips = el("div", "chips");
+
+  T[L].ex.forEach(text => {
+    const button = el("button", null, text);
+    button.onclick = () => ask(text);
+    chips.appendChild(button);
+  });
+
+  message.appendChild(chips);
+  log.appendChild(message);
+}
+
+async function ask(question, file = null) {
+  question = question.trim();
+  if (!question && !file) return;
+
+  $("q").value = "";
+
+  const sentText = [question, file?.name].filter(Boolean).join("\n");
+  log.appendChild(el("div", "msg me", sentText));
+
+  const message = el("div", "msg bot");
+  message.appendChild(el("div", "txt", T[L].wait));
+  log.appendChild(message);
+  log.scrollTop = log.scrollHeight;
+
+  $("send").disabled = true;
+  $("attach").disabled = true;
+
+  try {
+    let response;
+
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("question", question);
+      formData.append("init_data", tg?.initData || "");
+
+      response = await fetch("/api/chat-media", {
+        method: "POST",
+        body: formData
+      });
+    } else {
+      response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          question,
+          init_data: tg?.initData || ""
+        })
+      });
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || T[L].net);
+    }
+
+    const answer = message.querySelector(".txt");
+    answer.textContent = data.answer || "";
+
+    if (data.recognized_text) {
+      const label = L === "ru" ? "Распознано" : "Танылған мәтін";
+      message.appendChild(
+        el("div", "src", `${label}: ${data.recognized_text}`)
+      );
+    }
+
+    (data.sources || []).forEach(source => {
+      const details = el("details", "src");
+      const article = source.article
+        ? `, ${T[L].art.toLowerCase()} ${source.article}`
+        : "";
+
+      details.appendChild(el(
+        "summary",
+        null,
+        `${T[L].src}: ${source.title}${article}`
+      ));
+
+      details.appendChild(
+        el("p", null, `${source.quote || ""}…`)
+      );
+
+      if (source.url && /^https?:/.test(source.url)) {
+        const link = el("a", null, source.url);
+        link.href = source.url;
+        link.target = "_blank";
+        link.rel = "noopener";
+        details.appendChild(link);
+      }
+
+      message.appendChild(details);
+    });
+
+    if (!data.error && award("ask")) save();
+
+  } catch (error) {
+    message.querySelector(".txt").textContent =
+      error.message || T[L].net;
+  } finally {
+    $("send").disabled = false;
+    $("attach").disabled = false;
+    log.scrollTop = log.scrollHeight;
+  }
+}
+
+$("attach").onclick = () => $("media").click();
+
+$("media").onchange = () => {
+  const file = $("media").files?.[0];
+  if (!file) return;
+
+  if (file.size > 10 * 1024 * 1024) {
+    alert(L === "ru"
+      ? "Файл должен быть меньше 10 МБ."
+      : "Файл 10 МБ-тан кіші болуы керек."
+    );
+    $("media").value = "";
+    return;
+  }
+
+  ask($("q").value, file);
+  $("media").value = "";
+};
+
+$("f").onsubmit = event => {
+  event.preventDefault();
+  ask($("q").value);
+};
 /* ---------- викторина ---------- */
 const Q=$("quiz");let qs=[],qi=0,right=0;
 function quizIntro(){Q.innerHTML="";const c=el("div","card");c.appendChild(el("div","lvl",T[L].qTitle));c.appendChild(el("p",null,T[L].qIntro));
