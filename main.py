@@ -91,6 +91,27 @@ def generate(prompt: str):
                 break  # 429, 404, таймаут: сразу следующая модель
     raise last
 
+REWRITE = """Перепиши вопрос пользователя в короткий поисковый запрос для поиска по тексту Конституции и законов Республики Казахстан.
+Замени разговорные слова официальными терминами (например: «главный в стране» -> «Президент Республики Казахстан», «депутаты» -> «Парламент», «голосовать» -> «избирательное право», «сколько лет сидеть» -> «срок полномочий»). Исправь опечатки. Язык запроса оставь тем же, что в вопросе. Выведи только запрос одной строкой, без пояснений.
+Вопрос: """
+
+def rewrite(q: str) -> str:
+    try:
+        r = client.models.generate_content(
+            model=GEN_MODEL, contents=REWRITE + q,
+            config=types.GenerateContentConfig(temperature=0, max_output_tokens=80))
+        t = (r.text or "").strip().split("\n")[0][:300]
+        return t or q
+    except Exception as e:
+        print("REWRITE FAIL:", str(e)[:100])
+        return q
+
+GREETINGS = {"привет", "здравствуйте", "салем", "сәлем", "салам", "hi", "hello", "добрый день", "қайырлы күн"}
+HELLO = {
+    "kk": "Сәлем! Мен Конституция және ішкі саясат бойынша анықтамалық-бот пен. Сұрағыңызды қарапайым тілмен жазыңыз.",
+    "ru": "Здравствуйте! Я справочник по Конституции и внутренней политике Казахстана. Задайте вопрос обычными словами, например: «Кто выбирает президента?»",
+}
+
 class Ask(BaseModel):
     question: str
     init_data: str = ""
@@ -104,14 +125,24 @@ def chat(body: Ask, request: Request):
     lang = lang_of(q)
     if len(q) < 3:
         return {"answer": {"kk": "Сұрағыңызды толығырақ жазыңыз.", "ru": "Напишите вопрос подробнее."}[lang], "sources": []}
+    if q.lower().strip("!?., ") in GREETINGS:
+        return {"answer": HELLO[lang], "sources": []}
     if col.count() == 0:
         return {"answer": {"kk": "Білім қоры әлі жүктелмеген. Біраздан кейін қайталаңыз.",
                            "ru": "База знаний ещё не загружена. Повторите вопрос позже."}[lang], "sources": [], "error": True}
     try:
-        emb = client.models.embed_content(model=EMBED_MODEL, contents=[q]).embeddings[0].values
-        res = col.query(query_embeddings=[emb], n_results=5)
-        items = [(d, m, dist) for d, m, dist in zip(res["documents"][0], res["metadatas"][0], res["distances"][0]) if dist <= MAX_DISTANCE]
-        print("BEST DISTANCES:", [round(d, 2) for d in res["distances"][0]])
+        rq = rewrite(q)
+        print(">>> ПЕРЕФОРМУЛИРОВКА:", rq)
+        embs = client.models.embed_content(model=EMBED_MODEL, contents=[q, rq]).embeddings
+        res = col.query(query_embeddings=[e.values for e in embs], n_results=5)
+        best = {}
+        for docs, metas, dists in zip(res["documents"], res["metadatas"], res["distances"]):
+            for d, m, dist in zip(docs, metas, dists):
+                if d not in best or dist < best[d][2]:
+                    best[d] = (d, m, dist)
+        items = sorted(best.values(), key=lambda x: x[2])
+        print("BEST DISTANCES:", [round(x[2], 2) for x in items[:5]])
+        items = [x for x in items if x[2] <= MAX_DISTANCE][:5]
         if not items:
             return {"answer": NO_INFO[lang], "sources": []}
         ctx = "\n\n".join(f"[{m['title']}, статья {m['article'] or '—'}]\n{d}" for d, m, _ in items)
@@ -129,9 +160,7 @@ def chat(body: Ask, request: Request):
         return {"answer": answer, "sources": sources}
     except Exception as e:
         print("ERROR:", e)  # подробности только в лог сервера, не пользователю
-        busy = {"kk": "Сервис уақытша қолжетімсіз. Біраздан кейін қайталаңыз.",
-                "ru": "Сервис временно недоступен. Повторите вопрос через минуту."}
-        return {"answer": busy[lang], "sources": [], "error": True}
+        return {"answer": {"kk": "Техникалық қате. Кейінірек қайталап көріңіз.", "ru": "Произошла техническая ошибка. Повторите попытку позже."}[lang], "sources": [], "error": True}
 
 @app.get("/api/quiz")
 def quiz(lang: str = "ru", n: int = 5):
