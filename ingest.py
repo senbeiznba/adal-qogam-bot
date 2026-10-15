@@ -5,7 +5,10 @@ import chromadb
 from dotenv import load_dotenv
 from google import genai
 
-load_dotenv()
+BASE = os.path.dirname(os.path.abspath(__file__))  # пути не зависят от папки запуска
+load_dotenv(os.path.join(BASE, ".env"), override=True)
+if not os.getenv("GEMINI_API_KEY"):
+    raise SystemExit("GEMINI_API_KEY пустой: впишите ключ в .env и сохраните файл")
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 EMBED_MODEL = os.getenv("EMBED_MODEL", "gemini-embedding-001")
 
@@ -56,14 +59,14 @@ def embed(texts):
     return vecs
 
 def main():
-    sources = json.load(open("data/sources.json", encoding="utf-8"))
-    db = chromadb.PersistentClient(path="chroma_db")
+    sources = json.load(open(os.path.join(BASE, "data", "sources.json"), encoding="utf-8"))
+    db = chromadb.PersistentClient(path=os.path.join(BASE, "chroma_db"))
     try: db.delete_collection("docs")
     except Exception: pass
     col = db.create_collection("docs", metadata={"hnsw:space": "cosine"})
     ids, docs, metas = [], [], []
     for fname, meta in sources.items():
-        path = os.path.join("data", fname)
+        path = os.path.join(BASE, "data", fname)
         if not os.path.exists(path):
             print("нет файла:", path); continue
         for n, (label, c) in enumerate(split_doc(open(path, encoding="utf-8").read())):

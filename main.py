@@ -11,7 +11,10 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
-load_dotenv(override=True)
+BASE = os.path.dirname(os.path.abspath(__file__))  # пути не зависят от папки запуска
+load_dotenv(os.path.join(BASE, ".env"), override=True)
+if not os.getenv("GEMINI_API_KEY"):
+    raise SystemExit("GEMINI_API_KEY пустой: впишите ключ в .env и сохраните файл")
 client = genai.Client(
     api_key=os.environ["GEMINI_API_KEY"],
     http_options=types.HttpOptions(timeout=30000),  # 30 секунд на запрос
@@ -23,7 +26,10 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 DEV_MODE = os.getenv("DEV_MODE", "0") == "1"
 print(">>> MODEL:", GEN_MODEL, "| MAX_DISTANCE:", MAX_DISTANCE)
 
-col = chromadb.PersistentClient(path="chroma_db").get_collection("docs")
+try:
+    col = chromadb.PersistentClient(path=os.path.join(BASE, "chroma_db")).get_collection("docs")
+except ValueError:
+    raise SystemExit("База не найдена: сначала запустите python ingest.py")
 app = FastAPI(title="Адал қоғам AI")
 
 SYSTEM = """Ты — справочник-навигатор по внутренней политике Казахстана и новой Конституции 2026 года.
@@ -42,10 +48,10 @@ NO_INFO = {
 def lang_of(text: str) -> str:
     return "kk" if any(c in text for c in "әіңғүұқөһӘІҢҒҮҰҚӨҺ") else "ru"
 
-def check_init_data(init_data: str):
-    """Проверка подписи Telegram WebApp initData (HMAC-SHA256)."""
+def check_init_data(init_data: str) -> str:
+    """Проверка подписи Telegram WebApp initData (HMAC-SHA256). Возвращает id пользователя Telegram."""
     if DEV_MODE:
-        return
+        return ""
     pairs = dict(parse_qsl(init_data, keep_blank_values=True))
     got = pairs.pop("hash", "")
     data = "\n".join(f"{k}={v}" for k, v in sorted(pairs.items()))
@@ -55,6 +61,10 @@ def check_init_data(init_data: str):
         raise HTTPException(401, "Invalid Telegram signature")
     if time.time() - int(pairs.get("auth_date", 0)) > 86400:
         raise HTTPException(401, "Session expired")
+    try:
+        return str(json.loads(pairs.get("user", "{}")).get("id", ""))
+    except ValueError:
+        return ""
 
 hits = defaultdict(deque)
 def rate_limit(key: str, limit=15, window=60):
@@ -87,8 +97,9 @@ class Ask(BaseModel):
 
 @app.post("/api/chat")
 def chat(body: Ask, request: Request):
-    check_init_data(body.init_data)
-    rate_limit(request.client.host)
+    uid = check_init_data(body.init_data)
+    # за прокси хостинга IP у всех одинаковый, поэтому лимит по id пользователя Telegram
+    rate_limit(uid or request.client.host)
     q = body.question.strip()[:500]
     lang = lang_of(q)
     if len(q) < 3:
@@ -114,18 +125,19 @@ def chat(body: Ask, request: Request):
                 sources.append({"title": m["title"], "article": m["article"], "url": m["url"], "quote": d[:300]})
         return {"answer": answer, "sources": sources}
     except Exception as e:
-        print("ERROR:", e)
-        return {"answer": f"DEBUG: {str(e)[:400]}", "sources": [], "error": True}
-import json, random
+        print("ERROR:", e)  # подробности только в лог сервера, не пользователю
+        busy = {"kk": "Сервис уақытша қолжетімсіз. Біраздан кейін қайталаңыз.",
+                "ru": "Сервис временно недоступен. Повторите вопрос через минуту."}
+        return {"answer": busy[lang], "sources": [], "error": True}
 
 @app.get("/api/quiz")
 def quiz(lang: str = "ru", n: int = 5):
-    data = json.load(open("quiz.json", encoding="utf-8"))
+    data = json.load(open(os.path.join(BASE, "quiz.json"), encoding="utf-8"))
     pool = [x for x in data if x["lang"] == lang]
-    return random.sample(pool, min(n, len(pool)))
+    return random.sample(pool, max(0, min(n, 20, len(pool))))
 
 @app.get("/")
 def index():
-    return FileResponse("static/index.html")
+    return FileResponse(os.path.join(BASE, "static", "index.html"))
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(BASE, "static")), name="static")
