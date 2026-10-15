@@ -12,7 +12,10 @@
 body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
 header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:3px solid var(--sun)}
 header h1{font-size:18px;margin:0;font-weight:700}header small{display:block;color:var(--hint);font-size:12px;font-weight:400}
-header h1{min-width:0}.right{flex:none;display:flex;align-items:center;gap:10px}.lang{display:flex}
+.left{display:flex;align-items:center;gap:10px;min-width:0}header h1{min-width:0}
+.homeb{flex:none;width:38px;height:38px;display:grid;place-items:center;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);cursor:pointer}
+.homeb svg{width:20px;height:20px}.homeb.on{background:var(--sky);border-color:var(--sky);color:#fff}
+.right{flex:none;display:flex;align-items:center;gap:10px}.lang{display:flex}
 .xp{font-size:13px;font-weight:600;color:var(--sky);white-space:nowrap}
 .lang button{border:1px solid var(--line);background:none;color:var(--fg);padding:4px 10px;font:inherit;font-size:13px;cursor:pointer}
 .lang button:first-child{border-radius:8px 0 0 8px}.lang button:last-child{border-radius:0 8px 8px 0;border-left:0}
@@ -66,7 +69,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--sun);outline-of
 </head>
 <body>
 <header>
-  <h1>Адал қоғам<small id="sub"></small></h1>
+  <div class="left"><button class="homeb on" id="homeBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg></button>
+  <h1>Адал қоғам<small id="sub"></small></h1></div>
   <div class="right"><span class="xp" id="xpTop"></span>
   <div class="lang"><button id="kk">ҚАЗ</button><button id="ru" class="on">РУС</button></div></div>
 </header>
@@ -76,7 +80,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--sun);outline-of
   <form id="f"><input id="q" maxlength="500" autocomplete="off"><button class="btn" id="send"></button></form></section>
 <section class="view" id="v-quiz"><div class="pad" id="quiz"></div></section>
 <section class="view" id="v-me"><div class="pad" id="me"></div></section>
-<nav><button data-v="home"></button><button data-v="ask"></button><button data-v="quiz"></button><button data-v="me"></button></nav>
+<nav><button data-v="ask"></button><button data-v="quiz"></button><button data-v="me"></button></nav>
 
 <script>
 const tg=window.Telegram?.WebApp; tg?.ready(); tg?.expand();
@@ -84,7 +88,7 @@ const $=id=>document.getElementById(id), el=(t,c,x)=>{const e=document.createEle
 const buzz=k=>{try{tg?.HapticFeedback?.notificationOccurred(k)}catch(e){}};
 
 const T={
-ru:{sub:"Справочник по Конституции 2026",ph:"Задайте вопрос…",send:"Отправить",nav:["Главная","Спросить","Викторина","Профиль"],
+ru:{sub:"Справочник по Конституции 2026",ph:"Задайте вопрос…",send:"Отправить",nav:["Спросить","Викторина","Профиль"],homeL:"Главная",
  hey:n=>n?`Здравствуйте, ${n}!`:"Здравствуйте!",heroT:"Конституция 2026 — простыми словами",
  heroP:"Задайте вопрос на русском или казахском: бот найдёт ответ в официальном тексте Конституции и укажет статью. Если подтверждения нет — честно скажет об этом.",
  goAsk:"Задать вопрос",goQuiz:"Пройти викторину",how:"Как это работает",pop:"Популярные вопросы",did:"Знаете ли вы?",
@@ -98,7 +102,7 @@ ru:{sub:"Справочник по Конституции 2026",ph:"Задайт
  lvls:["Гражданин","Знаток","Хранитель закона"],lvlOf:"Уровень",toNext:n=>`До следующего уровня: ${n} очков`,maxl:"Максимальный уровень",
  pts:"очков",streak:"дней подряд",played:"викторин",badges:"Значки",
  b:{first:"Первая викторина",perfect:"Без ошибок",streak3:"3 дня подряд",ask:"Задан вопрос боту",xp100:"100 очков"}},
-kk:{sub:"2026 жылғы Конституция бойынша анықтамалық",ph:"Сұрақ қойыңыз…",send:"Жіберу",nav:["Басты бет","Сұрау","Викторина","Профиль"],
+kk:{sub:"2026 жылғы Конституция бойынша анықтамалық",ph:"Сұрақ қойыңыз…",send:"Жіберу",nav:["Сұрау","Викторина","Профиль"],homeL:"Басты бет",
  hey:n=>n?`Сәлеметсіз бе, ${n}!`:"Сәлеметсіз бе!",heroT:"2026 жылғы Конституция — қарапайым тілмен",
  heroP:"Сұрағыңызды қазақ немесе орыс тілінде қойыңыз: бот жауапты Конституцияның ресми мәтінінен тауып, бабын көрсетеді. Расталған ақпарат болмаса, оны ашық айтады.",
  goAsk:"Сұрақ қою",goQuiz:"Викторинаны бастау",how:"Бұл қалай жұмыс істейді",pop:"Жиі қойылатын сұрақтар",did:"Білесіз бе?",
@@ -134,14 +138,14 @@ function showXp(){$("xpTop").textContent=`${S.xp} ${T[L].pts}`}
 /* ---------- навигация и язык ---------- */
 const cur=()=>document.querySelector(".view.on").id.slice(2);
 function show(v){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
- document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));$("homeBtn").classList.toggle("on",v==="home");
  try{v==="home"?tg.BackButton.hide():tg.BackButton.show()}catch(e){}
  if(v==="home")home();if(v==="quiz")quizIntro();if(v==="me")profile()}
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));$("homeBtn").onclick=()=>show("home");
 try{tg.BackButton.onClick(()=>show("home"))}catch(e){}
 function setLang(l){L=l;document.documentElement.lang=l;$("kk").classList.toggle("on",l==="kk");$("ru").classList.toggle("on",l==="ru");
  $("sub").textContent=T[l].sub;$("q").placeholder=T[l].ph;$("send").textContent=T[l].send;
- document.querySelectorAll("nav button").forEach((b,i)=>b.textContent=T[l].nav[i]);showXp();hello();
+ document.querySelectorAll("nav button").forEach((b,i)=>b.textContent=T[l].nav[i]);$("homeBtn").setAttribute("aria-label",T[l].homeL);$("homeBtn").title=T[l].homeL;showXp();hello();
  const v=cur();if(v==="home")home();if(v==="quiz")quizIntro();if(v==="me")profile()}
 $("kk").onclick=()=>setLang("kk");$("ru").onclick=()=>setLang("ru");
 
