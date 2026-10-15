@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from google import genai
 from google.genai import types
 from pydantic import BaseModel
-
+from fastapi import UploadFile, File, Form 
 BASE = os.path.dirname(os.path.abspath(__file__))  # пути не зависят от папки запуска
 load_dotenv(os.path.join(BASE, ".env"), override=True)
 if not os.getenv("GEMINI_API_KEY"):
