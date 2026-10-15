@@ -139,6 +139,12 @@ def quiz(lang: str = "ru", n: int = 5):
     pool = [x for x in data if x["lang"] == lang]
     return random.sample(pool, max(0, min(n, 20, len(pool))))
 
+@app.get("/api/sources")
+def sources():
+    """Список документов базы для главной страницы (из data/sources.json)."""
+    data = json.load(open(os.path.join(BASE, "data", "sources.json"), encoding="utf-8"))
+    return [{"title": m["title"], "url": m["url"]} for m in data.values()]
+
 @app.get("/")
 def index():
     return FileResponse(os.path.join(BASE, "static", "index.html"))

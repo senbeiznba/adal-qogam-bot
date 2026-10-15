@@ -12,8 +12,8 @@
 body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
 header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:3px solid var(--sun)}
 header h1{font-size:18px;margin:0;font-weight:700}header small{display:block;color:var(--hint);font-size:12px;font-weight:400}
-.right{display:flex;align-items:center;gap:10px}
-.xp{font-size:13px;font-weight:600;color:var(--sky)}
+header h1{min-width:0}.right{flex:none;display:flex;align-items:center;gap:10px}.lang{display:flex}
+.xp{font-size:13px;font-weight:600;color:var(--sky);white-space:nowrap}
 .lang button{border:1px solid var(--line);background:none;color:var(--fg);padding:4px 10px;font:inherit;font-size:13px;cursor:pointer}
 .lang button:first-child{border-radius:8px 0 0 8px}.lang button:last-child{border-radius:0 8px 8px 0;border-left:0}
 .lang button.on{background:var(--sky);color:#fff;border-color:var(--sky)}
@@ -43,6 +43,21 @@ input{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding
 .stats b{display:block;font-size:22px}.stats span{font-size:12px;color:var(--hint)}
 .badges{display:flex;flex-wrap:wrap;gap:8px}.badge{padding:6px 10px;border-radius:10px;font-size:13px;border:1px solid var(--line);color:var(--hint)}
 .badge.got{border-color:var(--sun);color:var(--fg);background:rgba(242,183,5,.16)}
+.hero{flex:none;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--sky),#0a6880);color:#fff;border-radius:16px;padding:18px 16px 16px}
+.hero svg{position:absolute;right:-34px;top:-34px;width:150px;color:var(--sun);opacity:.45;pointer-events:none}
+.hero .hi{position:relative;font-size:13px;opacity:.85}.hero h2{position:relative;margin:2px 0 8px;font-size:21px;line-height:1.25;max-width:85%}
+.hero p{position:relative;margin:0 0 14px;font-size:14px;opacity:.92}
+.row{position:relative;display:flex;flex-wrap:wrap;gap:8px}
+.btn.light{background:#fff;color:#0a6880}.btn.line{background:none;color:#fff;border:1px solid rgba(255,255,255,.7)}
+.mini{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:var(--fg);cursor:pointer}
+.mini .ic{flex:none;width:40px;height:40px;border-radius:50%;background:rgba(242,183,5,.18);color:#b88a00;display:grid;place-items:center;font-weight:700}
+.mini .grow{flex:1;min-width:0}.mini .prog{margin-top:6px}.mini .go{color:var(--hint);font-size:20px}
+.h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--hint);margin:4px 0 -6px}
+.steps{display:flex;flex-direction:column;gap:12px}.step{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.step b{flex:none;width:26px;height:26px;border-radius:50%;background:var(--sun);color:#14202b;display:grid;place-items:center;font-size:13px}
+.srcs{display:flex;flex-direction:column;gap:8px;font-size:14px}.srcs a{color:var(--sky);text-decoration:none}
+.note{color:var(--hint);font-size:12px;text-align:center;margin-bottom:4px}
+.grp{display:flex;flex-direction:column;gap:14px}.grp[hidden]{display:none}
 nav{display:flex;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0);background:var(--bg)}
 nav button{flex:1;background:none;border:0;padding:12px 4px;font:inherit;font-size:14px;color:var(--hint);cursor:pointer;border-top:3px solid transparent}
 nav button.on{color:var(--sky);font-weight:700;border-top-color:var(--sky)}
@@ -56,11 +71,12 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--sun);outline-of
   <div class="lang"><button id="kk">ҚАЗ</button><button id="ru" class="on">РУС</button></div></div>
 </header>
 
-<section class="view on" id="v-ask"><div id="log"></div>
+<section class="view on" id="v-home"><div class="pad" id="home"></div></section>
+<section class="view" id="v-ask"><div id="log"></div>
   <form id="f"><input id="q" maxlength="500" autocomplete="off"><button class="btn" id="send"></button></form></section>
 <section class="view" id="v-quiz"><div class="pad" id="quiz"></div></section>
 <section class="view" id="v-me"><div class="pad" id="me"></div></section>
-<nav><button data-v="ask"></button><button data-v="quiz"></button><button data-v="me"></button></nav>
+<nav><button data-v="home"></button><button data-v="ask"></button><button data-v="quiz"></button><button data-v="me"></button></nav>
 
 <script>
 const tg=window.Telegram?.WebApp; tg?.ready(); tg?.expand();
@@ -68,7 +84,13 @@ const $=id=>document.getElementById(id), el=(t,c,x)=>{const e=document.createEle
 const buzz=k=>{try{tg?.HapticFeedback?.notificationOccurred(k)}catch(e){}};
 
 const T={
-ru:{sub:"Справочник по Конституции 2026",ph:"Задайте вопрос…",send:"Отправить",nav:["Спросить","Викторина","Профиль"],
+ru:{sub:"Справочник по Конституции 2026",ph:"Задайте вопрос…",send:"Отправить",nav:["Главная","Спросить","Викторина","Профиль"],
+ hey:n=>n?`Здравствуйте, ${n}!`:"Здравствуйте!",heroT:"Конституция 2026 — простыми словами",
+ heroP:"Задайте вопрос на русском или казахском: бот найдёт ответ в официальном тексте Конституции и укажет статью. Если подтверждения нет — честно скажет об этом.",
+ goAsk:"Задать вопрос",goQuiz:"Пройти викторину",how:"Как это работает",pop:"Популярные вопросы",did:"Знаете ли вы?",
+ days:n=>{const a=n%10,b=n%100;return(a===1&&b!==11?"день":a>=2&&a<=4&&(b<12||b>14)?"дня":"дней")+" подряд"},
+ steps:["Вы задаёте вопрос своими словами","Бот ищет подходящие статьи в официальном тексте Конституции","Ответ приходит со ссылкой на статью и цитатой первоисточника"],
+ note:"Ответы основаны только на официальном тексте Конституции и не заменяют консультацию юриста.",
  hi:"Задайте вопрос о Конституции — отвечу со ссылкой на статью. Например:",wait:"Ищу в документах…",src:"Источники",net:"Нет связи с сервером. Проверьте интернет и повторите.",
  ex:["Какие права и свободы гарантирует Конституция?","Как избирается Президент?","Что сказано о справедливом государстве?"],
  qTitle:"Викторина по Конституции",qIntro:"5 вопросов. +10 очков за верный ответ, +20 бонус за идеальный результат.",start:"Начать",next:"Дальше",finish:"Завершить",
@@ -76,7 +98,13 @@ ru:{sub:"Справочник по Конституции 2026",ph:"Задайт
  lvls:["Гражданин","Знаток","Хранитель закона"],lvlOf:"Уровень",toNext:n=>`До следующего уровня: ${n} очков`,maxl:"Максимальный уровень",
  pts:"очков",streak:"дней подряд",played:"викторин",badges:"Значки",
  b:{first:"Первая викторина",perfect:"Без ошибок",streak3:"3 дня подряд",ask:"Задан вопрос боту",xp100:"100 очков"}},
-kk:{sub:"2026 жылғы Конституция бойынша анықтамалық",ph:"Сұрақ қойыңыз…",send:"Жіберу",nav:["Сұрау","Викторина","Профиль"],
+kk:{sub:"2026 жылғы Конституция бойынша анықтамалық",ph:"Сұрақ қойыңыз…",send:"Жіберу",nav:["Басты бет","Сұрау","Викторина","Профиль"],
+ hey:n=>n?`Сәлеметсіз бе, ${n}!`:"Сәлеметсіз бе!",heroT:"2026 жылғы Конституция — қарапайым тілмен",
+ heroP:"Сұрағыңызды қазақ немесе орыс тілінде қойыңыз: бот жауапты Конституцияның ресми мәтінінен тауып, бабын көрсетеді. Расталған ақпарат болмаса, оны ашық айтады.",
+ goAsk:"Сұрақ қою",goQuiz:"Викторинаны бастау",how:"Бұл қалай жұмыс істейді",pop:"Жиі қойылатын сұрақтар",did:"Білесіз бе?",
+ days:()=>"күн қатарынан",
+ steps:["Сұрағыңызды өз сөзіңізбен жазасыз","Бот Конституцияның ресми мәтінінен тиісті баптарды іздейді","Жауап бап нөмірімен және дереккөзден үзіндімен беріледі"],
+ note:"Жауаптар тек Конституцияның ресми мәтініне негізделген және заңгер кеңесін алмастырмайды.",
  hi:"Конституция туралы сұрақ қойыңыз — бап нөмірімен жауап беремін. Мысалы:",wait:"Құжаттардан іздеудемін…",src:"Дереккөздер",net:"Серверге қосылу мүмкін емес. Интернетті тексеріп, қайталаңыз.",
  ex:["Конституция қандай құқықтар мен бостандықтарды кепілдейді?","Президент қалай сайланады?","Әділетті мемлекет туралы не айтылған?"],
  qTitle:"Конституция бойынша викторина",qIntro:"5 сұрақ. Дұрыс жауапқа +10 ұпай, мінсіз нәтижеге +20 бонус.",start:"Бастау",next:"Келесі",finish:"Аяқтау",
@@ -104,14 +132,17 @@ function addXp(n){S.xp+=n;if(S.xp>=100)award("xp100");save();showXp()}
 function showXp(){$("xpTop").textContent=`${S.xp} ${T[L].pts}`}
 
 /* ---------- навигация и язык ---------- */
+const cur=()=>document.querySelector(".view.on").id.slice(2);
 function show(v){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
- if(v==="quiz")quizIntro();if(v==="me")profile()}
+ try{v==="home"?tg.BackButton.hide():tg.BackButton.show()}catch(e){}
+ if(v==="home")home();if(v==="quiz")quizIntro();if(v==="me")profile()}
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+try{tg.BackButton.onClick(()=>show("home"))}catch(e){}
 function setLang(l){L=l;document.documentElement.lang=l;$("kk").classList.toggle("on",l==="kk");$("ru").classList.toggle("on",l==="ru");
  $("sub").textContent=T[l].sub;$("q").placeholder=T[l].ph;$("send").textContent=T[l].send;
  document.querySelectorAll("nav button").forEach((b,i)=>b.textContent=T[l].nav[i]);showXp();hello();
- const v=document.querySelector(".view.on").id.slice(2);if(v==="quiz")quizIntro();if(v==="me")profile()}
+ const v=cur();if(v==="home")home();if(v==="quiz")quizIntro();if(v==="me")profile()}
 $("kk").onclick=()=>setLang("kk");$("ru").onclick=()=>setLang("ru");
 
 /* ---------- чат ---------- */
@@ -160,9 +191,37 @@ function profile(){const P=$("me");P.innerHTML="";const i=lvl(),c=el("div","card
  P.appendChild(el("div","qn",T[L].badges));const bd=el("div","badges");
  Object.keys(T[L].b).forEach(id=>bd.appendChild(el("span","badge"+(S.badges.includes(id)?" got":""),T[L].b[id])));P.appendChild(bd)}
 
+/* ---------- главная ---------- */
+const SUN='<svg viewBox="0 0 100 100" aria-hidden="true" fill="currentColor"><circle cx="50" cy="50" r="18"/>'+
+ Array.from({length:24},(_,k)=>`<path d="M48.6 26 50 5l1.4 21z" transform="rotate(${k*15} 50 50)"/>`).join("")+"</svg>";
+const facts={};let srcs=null;
+function home(){const H=$("home"),t=T[L],i=lvl(),nx=LV[i+1];H.innerHTML="";
+ const h=el("div","hero");h.innerHTML=SUN;
+ h.append(el("div","hi",t.hey(tg?.initDataUnsafe?.user?.first_name)),el("h2",null,t.heroT),el("p",null,t.heroP));
+ const r=el("div","row"),a=el("button","btn light",t.goAsk),q=el("button","btn line",t.goQuiz);
+ a.onclick=()=>{show("ask");$("q").focus()};q.onclick=()=>show("quiz");r.append(a,q);h.appendChild(r);H.appendChild(h);
+ const m=el("button","card mini"),g=el("span","grow"),pr=el("div","prog"),bar=el("i");m.onclick=()=>show("me");
+ bar.style.width=(nx?(S.xp-LV[i])/(nx-LV[i])*100:100)+"%";pr.appendChild(bar);
+ g.append(el("b",null,t.lvls[i]),el("div","qn",`${S.xp} ${t.pts} · ${S.streak} ${t.days(S.streak)}`),pr);
+ m.append(el("span","ic",i+1),g,el("span","go","›"));H.appendChild(m);
+ const f=el("div");f.hidden=true;H.appendChild(f);fact(f);
+ H.appendChild(el("div","h3",t.how));const st=el("div","card steps");
+ t.steps.forEach((s,k)=>{const w=el("div","step");w.append(el("b",null,k+1),el("span",null,s));st.appendChild(w)});H.appendChild(st);
+ H.appendChild(el("div","h3",t.pop));const ch=el("div","chips");ch.style.marginTop="0";
+ t.ex.forEach(s=>{const b=el("button",null,s);b.onclick=()=>{show("ask");ask(s)};ch.appendChild(b)});H.appendChild(ch);
+ const sw=el("div","grp"),sc=el("div","card srcs");sw.hidden=true;sw.append(el("div","h3",t.src),sc);H.appendChild(sw);sources(sw,sc);
+ H.appendChild(el("div","note",t.note))}
+function fact(box){const f=facts[L],l=L;
+ if(f===undefined){fetch(`/api/quiz?lang=${l}&n=1`).then(r=>r.json()).then(d=>{facts[l]=d[0]||null;if(box.isConnected&&l===L)fact(box)}).catch(()=>{});return}
+ if(!f)return;box.className="expl";box.hidden=false;box.append(el("b",null,T[L].did+" "),el("span",null,f.explanation+" "));
+ if(/^https?:/.test(f.url)){const a=el("a",null,`${T[L].art} ${f.article} →`);a.href=f.url;a.target="_blank";a.rel="noopener";box.appendChild(a)}}
+function sources(wrap,box){if(!srcs){fetch("/api/sources").then(r=>r.json()).then(d=>{srcs=d;if(wrap.isConnected)sources(wrap,box)}).catch(()=>{});return}
+ srcs.forEach(s=>{if(!/^https?:/.test(s.url))return;const a=el("a",null,s.title+" ↗");a.href=s.url;a.target="_blank";a.rel="noopener";box.appendChild(a)});
+ wrap.hidden=!box.children.length}
+
 /* ---------- старт ---------- */
-setLang(tg?.initDataUnsafe?.user?.language_code==="kk"?"kk":"ru");show("ask");
-Promise.race([store.get(),new Promise(r=>setTimeout(()=>r(null),1500))]).then(s=>{if(s){S={...DEF,...s};showXp()}}).catch(()=>{});
+setLang(tg?.initDataUnsafe?.user?.language_code==="kk"?"kk":"ru");show("home");
+Promise.race([store.get(),new Promise(r=>setTimeout(()=>r(null),1500))]).then(s=>{if(s){S={...DEF,...s};showXp();if(cur()==="home")home()}}).catch(()=>{});
 </script>
 </body>
 </html>
