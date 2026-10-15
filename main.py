@@ -26,10 +26,10 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 DEV_MODE = os.getenv("DEV_MODE", "0") == "1"
 print(">>> MODEL:", GEN_MODEL, "| MAX_DISTANCE:", MAX_DISTANCE)
 
-try:
-    col = chromadb.PersistentClient(path=os.path.join(BASE, "chroma_db")).get_collection("docs")
-except ValueError:
-    raise SystemExit("База не найдена: сначала запустите python ingest.py")
+col = chromadb.PersistentClient(path=os.path.join(BASE, "chroma_db")).get_or_create_collection(
+    "docs", metadata={"hnsw:space": "cosine"})
+if col.count() == 0:
+    print("!!! База знаний пуста: запустите python ingest.py и перезапустите сервер")
 app = FastAPI(title="Адал қоғам AI")
 
 SYSTEM = """Ты — справочник-навигатор по внутренней политике Казахстана и новой Конституции 2026 года.
@@ -104,6 +104,9 @@ def chat(body: Ask, request: Request):
     lang = lang_of(q)
     if len(q) < 3:
         return {"answer": {"kk": "Сұрағыңызды толығырақ жазыңыз.", "ru": "Напишите вопрос подробнее."}[lang], "sources": []}
+    if col.count() == 0:
+        return {"answer": {"kk": "Білім қоры әлі жүктелмеген. Біраздан кейін қайталаңыз.",
+                           "ru": "База знаний ещё не загружена. Повторите вопрос позже."}[lang], "sources": [], "error": True}
     try:
         emb = client.models.embed_content(model=EMBED_MODEL, contents=[q]).embeddings[0].values
         res = col.query(query_embeddings=[emb], n_results=5)

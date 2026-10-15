@@ -1,6 +1,6 @@
 """Нарезка документов из data/ по статьям и загрузка в Chroma.
 Запуск: python ingest.py"""
-import json, os, re
+import json, os, re, time
 import chromadb
 from dotenv import load_dotenv
 from google import genai
@@ -39,31 +39,25 @@ def chunk(text: str):
     return parts
 
 def embed(texts):
-    import time
-    vecs = []
-    i = 0
-    while i < len(texts):
-        batch = texts[i:i + 20]
+    while True:
         try:
-            r = client.models.embed_content(model=EMBED_MODEL, contents=batch)
-            vecs += [e.values for e in r.embeddings]
-            i += 20
-            print(f"  эмбеддинги: {min(i, len(texts))}/{len(texts)}")
-            time.sleep(14)  # не выходим за 100 запросов в минуту
+            r = client.models.embed_content(model=EMBED_MODEL, contents=texts)
+            return [e.values for e in r.embeddings]
         except Exception as e:
+            if "PerDay" in str(e):  # дневной лимит: ждать минутами бесполезно
+                raise SystemExit("Дневной лимит эмбеддингов Gemini исчерпан. Загруженное сохранено — "
+                                 "запустите ingest.py позже, он продолжит с места остановки.")
             if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
                 print("  лимит, жду 30 секунд…")
                 time.sleep(30)
             else:
                 raise
-    return vecs
 
 def main():
     sources = json.load(open(os.path.join(BASE, "data", "sources.json"), encoding="utf-8"))
     db = chromadb.PersistentClient(path=os.path.join(BASE, "chroma_db"))
-    try: db.delete_collection("docs")
-    except Exception: pass
-    col = db.create_collection("docs", metadata={"hnsw:space": "cosine"})
+    # коллекцию не пересоздаём: повторный запуск досчитывает только новые и изменённые фрагменты
+    col = db.get_or_create_collection("docs", metadata={"hnsw:space": "cosine"})
     ids, docs, metas = [], [], []
     for fname, meta in sources.items():
         path = os.path.join(BASE, "data", fname)
@@ -72,8 +66,19 @@ def main():
         for n, (label, c) in enumerate(split_doc(open(path, encoding="utf-8").read())):
             ids.append(f"{fname}-{n}"); docs.append(c)
             metas.append({"title": meta["title"], "url": meta["url"], "article": label})
-    col.add(ids=ids, documents=docs, metadatas=metas, embeddings=embed(docs))
-    print(f"Загружено фрагментов: {len(ids)}")
+    old = col.get(include=["documents", "metadatas"])
+    have = {i: (d, m) for i, d, m in zip(old["ids"], old["documents"], old["metadatas"])}
+    stale = [i for i in have if i not in set(ids)]
+    if stale:
+        col.delete(ids=stale)
+    todo = [k for k in range(len(ids)) if have.get(ids[k]) != (docs[k], metas[k])]
+    for i in range(0, len(todo), 20):
+        b = todo[i:i + 20]
+        col.upsert(ids=[ids[k] for k in b], documents=[docs[k] for k in b], metadatas=[metas[k] for k in b],
+                   embeddings=embed([docs[k] for k in b]))  # сохраняем каждую пачку сразу
+        print(f"  эмбеддинги: {min(i + 20, len(todo))}/{len(todo)}")
+        time.sleep(14)  # не выходим за 100 запросов в минуту
+    print(f"Фрагментов в базе: {col.count()} (новых или изменённых: {len(todo)}, удалено: {len(stale)})")
 
 if __name__ == "__main__":
     main()
