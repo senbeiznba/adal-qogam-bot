@@ -1,0 +1,1 @@
+# adal-qogam-bot
