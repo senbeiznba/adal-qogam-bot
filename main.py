@@ -165,7 +165,7 @@ def rewrite(question: str) -> str:
         result = client.models.generate_content(
             model=GEN_MODEL,
             contents=REWRITE + question,
-            config=types.GenerateContentConfig(temperature=0, max_output_tokens=80),
+            config=types.GenerateContentConfig(temperature=0, max_output_tokens=300),
         )
         text = (result.text or "").strip().split("\n")[0][:300]
         return text or question
@@ -201,7 +201,7 @@ def inspect_media(data: bytes, mime_type: str, lang: str) -> str:
     result = client.models.generate_content(
         model=GEN_MODEL,
         contents=[instruction, part],
-        config=types.GenerateContentConfig(temperature=0, max_output_tokens=500),
+        config=types.GenerateContentConfig(temperature=0, max_output_tokens=1500),
     )
     return (result.text or "").strip()
 
@@ -320,6 +320,7 @@ async def chat_media(
     file: UploadFile = File(...),
     question: str = Form(""),
     init_data: str = Form(""),
+    lang: str = Form(""),
 ):
     uid = check_init_data(init_data)
     rate_limit(uid or request.client.host)
@@ -331,7 +332,8 @@ async def chat_media(
     if len(data) > MAX_MEDIA_BYTES:
         raise HTTPException(413, "Файл должен быть меньше 10 МБ")
 
-    lang = lang_of(question or file.filename or "")
+    ui_lang = lang if lang in ("ru", "kk") else "ru"
+    lang = lang_of(question) if question.strip() else ui_lang
 
     try:
         media_text = inspect_media(data, mime_type, lang)
