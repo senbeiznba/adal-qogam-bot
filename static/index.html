@@ -62,44 +62,46 @@ input{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding
 .note{color:var(--hint);font-size:12px;text-align:center;margin-bottom:4px}
 .grp{display:flex;flex-direction:column;gap:14px}.grp[hidden]{display:none}
 nav{display:flex;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0);background:var(--bg)}
-nav button{flex:1;background:none;border:0;padding:12px 4px;font:inherit;font-size:14px;color:var(--hint);cursor:pointer;border-top:3px solid transparent}
+nav button{flex:1;background:none;border:0;padding:8px 4px 6px;font:inherit;font-size:14px;color:var(--hint);cursor:pointer;border-top:3px solid transparent}
 nav button.on{color:var(--sky);font-weight:700;border-top-color:var(--sky)}
+.ibtn{flex:none;width:44px;height:44px;display:grid;place-items:center;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--sky);cursor:pointer}
+.ibtn svg{width:22px;height:22px}.ibtn:disabled{opacity:.45}
+.ibtn.rec{background:var(--bad);border-color:var(--bad);color:#fff;animation:pulse 1.1s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(214,69,69,.55)}100%{box-shadow:0 0 0 12px rgba(214,69,69,0)}}
+.recbar{display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(214,69,69,.12);color:var(--bad);font-size:14px;font-weight:600}
+.recbar.on{display:flex}.recbar i{width:9px;height:9px;border-radius:50%;background:var(--bad);animation:pulse 1.1s infinite}
+.thumb{display:block;max-width:180px;max-height:140px;border-radius:10px;margin-top:6px}
+nav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px}
+nav button svg{width:22px;height:22px}
 button:focus-visible,input:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
 </style>
 </head>
 <body>
 <header>
-  <div class="left"><button class="homeb on" id="homeBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg></button>
-  <h1>Адал қоғам<small id="sub"></small></h1></div>
+  <div class="left"><h1>Адал қоғам<small id="sub"></small></h1></div>
   <div class="right"><span class="xp" id="xpTop"></span>
   <div class="lang"><button id="kk">ҚАЗ</button><button id="ru" class="on">РУС</button></div></div>
 </header>
 
 <section class="view on" id="v-home"><div class="pad" id="home"></div></section>
 <section class="view" id="v-ask"><div id="log"></div>
+ <div class="recbar" id="recbar"><i></i><span id="rectxt"></span></div>
  <form id="f">
   <input id="q" maxlength="500" autocomplete="off">
-
-  <input
-    id="media"
-    type="file"
-    accept="image/jpeg,image/png,image/webp,audio/*"
-    hidden
-  >
-
-  <button
-    class="btn ghost"
-    id="attach"
-    type="button"
-    aria-label="Прикрепить фото или аудио"
-    title="Прикрепить фото или аудио"
-  >📎</button>
-
+  <input id="media" type="file" accept="image/jpeg,image/png,image/webp,audio/*" hidden>
+  <button class="ibtn" id="attach" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M8.5 6 10 3.5h4L15.5 6"/></svg></button>
+  <button class="ibtn" id="mic" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></button>
   <button class="btn" id="send" type="submit"></button>
-</form>
+ </form>
+</section>
 <section class="view" id="v-quiz"><div class="pad" id="quiz"></div></section>
 <section class="view" id="v-me"><div class="pad" id="me"></div></section>
-<nav><button data-v="ask"></button><button data-v="quiz"></button><button data-v="me"></button></nav>
+<nav>
+ <button data-v="home"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg><span></span></button>
+ <button data-v="ask"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span></span></button>
+ <button data-v="quiz"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5 7 21l5-3 5 3-1.5-7.5"/></svg><span></span></button>
+ <button data-v="me"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span></span></button>
+</nav>
 
 <script>
 const tg=window.Telegram?.WebApp; tg?.ready(); tg?.expand();
@@ -107,7 +109,8 @@ const $=id=>document.getElementById(id), el=(t,c,x)=>{const e=document.createEle
 const buzz=k=>{try{tg?.HapticFeedback?.notificationOccurred(k)}catch(e){}};
 
 const T={
-ru:{sub:"Справочник по Конституции 2026",ph:"Задайте вопрос…",send:"Отправить",nav:["Спросить","Викторина","Профиль"],homeL:"Главная",
+ru:{sub:"Справочник по Конституции 2026",ph:"Задайте вопрос…",send:"Отправить",nav:["Главная","Спросить","Викторина","Профиль"],homeL:"Главная",
+ attachT:"Фото или аудиофайл",micT:"Голосовой вопрос",rec:"Идёт запись… нажмите на микрофон, чтобы отправить",voice:"🎤 Голосовое сообщение",micErr:"Нет доступа к микрофону. Разрешите доступ или прикрепите аудиофайл.",big:"Файл должен быть меньше 10 МБ.",heard:"Распознано",
  hey:n=>n?`Здравствуйте, ${n}!`:"Здравствуйте!",heroT:"Конституция 2026 — простыми словами",
  heroP:"Задайте вопрос на русском или казахском: бот найдёт ответ в официальном тексте Конституции и укажет статью. Если подтверждения нет — честно скажет об этом.",
  goAsk:"Задать вопрос",goQuiz:"Пройти викторину",how:"Как это работает",pop:"Популярные вопросы",did:"Знаете ли вы?",
@@ -121,7 +124,8 @@ ru:{sub:"Справочник по Конституции 2026",ph:"Задайт
  lvls:["Гражданин","Знаток","Хранитель закона"],lvlOf:"Уровень",toNext:n=>`До следующего уровня: ${n} очков`,maxl:"Максимальный уровень",
  pts:"очков",streak:"дней подряд",played:"викторин",badges:"Значки",
  b:{first:"Первая викторина",perfect:"Без ошибок",streak3:"3 дня подряд",ask:"Задан вопрос боту",xp100:"100 очков"}},
-kk:{sub:"2026 жылғы Конституция бойынша анықтамалық",ph:"Сұрақ қойыңыз…",send:"Жіберу",nav:["Сұрау","Викторина","Профиль"],homeL:"Басты бет",
+kk:{sub:"2026 жылғы Конституция бойынша анықтамалық",ph:"Сұрақ қойыңыз…",send:"Жіберу",nav:["Басты бет","Сұрау","Викторина","Профиль"],homeL:"Басты бет",
+ attachT:"Фото немесе аудиофайл",micT:"Дауыспен сұрау",rec:"Жазылуда… жіберу үшін микрофонды басыңыз",voice:"🎤 Дауыстық хабарлама",micErr:"Микрофонға қолжетім жоқ. Рұқсат беріңіз немесе аудиофайл тіркеңіз.",big:"Файл 10 МБ-тан кіші болуы керек.",heard:"Танылған мәтін",
  hey:n=>n?`Сәлеметсіз бе, ${n}!`:"Сәлеметсіз бе!",heroT:"2026 жылғы Конституция — қарапайым тілмен",
  heroP:"Сұрағыңызды қазақ немесе орыс тілінде қойыңыз: бот жауапты Конституцияның ресми мәтінінен тауып, бабын көрсетеді. Расталған ақпарат болмаса, оны ашық айтады.",
  goAsk:"Сұрақ қою",goQuiz:"Викторинаны бастау",how:"Бұл қалай жұмыс істейді",pop:"Жиі қойылатын сұрақтар",did:"Білесіз бе?",
@@ -157,14 +161,15 @@ function showXp(){$("xpTop").textContent=`${S.xp} ${T[L].pts}`}
 /* ---------- навигация и язык ---------- */
 const cur=()=>document.querySelector(".view.on").id.slice(2);
 function show(v){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
- document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));$("homeBtn").classList.toggle("on",v==="home");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
  try{v==="home"?tg.BackButton.hide():tg.BackButton.show()}catch(e){}
  if(v==="home")home();if(v==="quiz")quizIntro();if(v==="me")profile()}
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));$("homeBtn").onclick=()=>show("home");
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
 try{tg.BackButton.onClick(()=>show("home"))}catch(e){}
 function setLang(l){L=l;document.documentElement.lang=l;$("kk").classList.toggle("on",l==="kk");$("ru").classList.toggle("on",l==="ru");
  $("sub").textContent=T[l].sub;$("q").placeholder=T[l].ph;$("send").textContent=T[l].send;
- document.querySelectorAll("nav button").forEach((b,i)=>b.textContent=T[l].nav[i]);$("homeBtn").setAttribute("aria-label",T[l].homeL);$("homeBtn").title=T[l].homeL;showXp();hello();
+ document.querySelectorAll("nav button").forEach((b,i)=>b.querySelector("span").textContent=T[l].nav[i]);
+ $("attach").title=$("attach").ariaLabel=T[l].attachT;$("mic").title=$("mic").ariaLabel=T[l].micT;showXp();hello();
  const v=cur();if(v==="home")home();if(v==="quiz")quizIntro();if(v==="me")profile()}
 $("kk").onclick=()=>setLang("kk");$("ru").onclick=()=>setLang("ru");
 
@@ -193,8 +198,12 @@ async function ask(question, file = null) {
 
   $("q").value = "";
 
-  const sentText = [question, file?.name].filter(Boolean).join("\n");
-  log.appendChild(el("div", "msg me", sentText));
+  const isVoice = file && file.name === "voice.wav";
+  const isImg = file && file.type.startsWith("image/");
+  const label = !file ? "" : isVoice ? T[L].voice : (isImg ? "📷 " : "🎧 ") + file.name;
+  const mine = el("div", "msg me", [question, label].filter(Boolean).join("\n"));
+  if (isImg) { const im = el("img", "thumb"); im.src = URL.createObjectURL(file); im.onload = () => URL.revokeObjectURL(im.src); mine.appendChild(im); }
+  log.appendChild(mine);
 
   const message = el("div", "msg bot");
   message.appendChild(el("div", "txt", T[L].wait));
@@ -203,6 +212,7 @@ async function ask(question, file = null) {
 
   $("send").disabled = true;
   $("attach").disabled = true;
+  $("mic").disabled = true;
 
   try {
     let response;
@@ -212,6 +222,7 @@ async function ask(question, file = null) {
       formData.append("file", file);
       formData.append("question", question);
       formData.append("init_data", tg?.initData || "");
+      formData.append("lang", L);
 
       response = await fetch("/api/chat-media", {
         method: "POST",
@@ -238,9 +249,8 @@ async function ask(question, file = null) {
     answer.textContent = data.answer || "";
 
     if (data.recognized_text) {
-      const label = L === "ru" ? "Распознано" : "Танылған мәтін";
       message.appendChild(
-        el("div", "src", `${label}: ${data.recognized_text}`)
+        el("div", "src", `${T[L].heard}: ${data.recognized_text}`)
       );
     }
 
@@ -279,6 +289,7 @@ async function ask(question, file = null) {
   } finally {
     $("send").disabled = false;
     $("attach").disabled = false;
+    $("mic").disabled = false;
     log.scrollTop = log.scrollHeight;
   }
 }
@@ -290,10 +301,7 @@ $("media").onchange = () => {
   if (!file) return;
 
   if (file.size > 10 * 1024 * 1024) {
-    alert(L === "ru"
-      ? "Файл должен быть меньше 10 МБ."
-      : "Файл 10 МБ-тан кіші болуы керек."
-    );
+    alert(T[L].big);
     $("media").value = "";
     return;
   }
@@ -301,6 +309,44 @@ $("media").onchange = () => {
   ask($("q").value, file);
   $("media").value = "";
 };
+
+
+/* ---------- голос: запись с микрофона → WAV 16 кГц → /api/chat-media ---------- */
+async function toWav(blob){
+  const AC=window.AudioContext||window.webkitAudioContext,ctx=new AC();
+  const buf=await blob.arrayBuffer();
+  const dec=await new Promise((ok,no)=>ctx.decodeAudioData(buf,ok,no));
+  try{ctx.close()}catch(e){}
+  const rate=16000,OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  const off=new OAC(1,Math.max(1,Math.ceil(dec.duration*rate)),rate),src=off.createBufferSource();
+  src.buffer=dec;src.connect(off.destination);src.start();
+  const out=await new Promise((ok,no)=>{const p=off.startRendering();if(p&&p.then)p.then(ok,no);else off.oncomplete=e=>ok(e.renderedBuffer)});
+  const pcm=out.getChannelData(0),ab=new ArrayBuffer(44+pcm.length*2),v=new DataView(ab);
+  const w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+  w(0,"RIFF");v.setUint32(4,36+pcm.length*2,true);w(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,pcm.length*2,true);
+  for(let i=0;i<pcm.length;i++){const x=Math.max(-1,Math.min(1,pcm[i]));v.setInt16(44+i*2,x<0?x*0x8000:x*0x7fff,true)}
+  return new Blob([ab],{type:"audio/wav"});
+}
+let rec=null,recTimer=0,recT0=0;
+const MAXREC=60;
+function recUi(on){$("mic").classList.toggle("rec",on);$("recbar").classList.toggle("on",on);$("send").disabled=on;$("attach").disabled=on;$("q").disabled=on;
+ if(on){const tick=()=>{$("rectxt").textContent=`${T[L].rec} (${Math.floor((Date.now()-recT0)/1000)} / ${MAXREC} c)`};recT0=Date.now();tick();recTimer=setInterval(()=>{tick();if(Date.now()-recT0>=MAXREC*1000)stopRec()},500)}
+ else clearInterval(recTimer)}
+async function startRec(){
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){alert(T[L].micErr);return}
+  const chunks=[];rec=new MediaRecorder(stream);
+  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  rec.onstop=async()=>{
+    stream.getTracks().forEach(t=>t.stop());recUi(false);rec=null;
+    if(!chunks.length||Date.now()-recT0<700)return;
+    try{const wav=await toWav(new Blob(chunks,{type:chunks[0].type}));ask("",new File([wav],"voice.wav",{type:"audio/wav"}))}
+    catch(e){console.error(e);alert(T[L].micErr)}};
+  rec.start();recUi(true);buzz("success")}
+function stopRec(){if(rec&&rec.state!=="inactive")rec.stop()}
+$("mic").onclick=()=>rec?stopRec():startRec();
+if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder))$("mic").hidden=true;
 
 $("f").onsubmit = event => {
   event.preventDefault();
